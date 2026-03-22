@@ -1,1 +1,141 @@
-# Faqih.ai
+# Al-Ijtihad — Faqih.ai
+
+An Islamic Jurisprudence (Fiqh) hybrid RAG system combining vector search, knowledge graphs, and BM25 keyword matching for comprehensive, citation-backed answers across classical Fiqh texts.
+
+## Architecture
+
+### System Overview
+
+```mermaid
+graph LR
+    subgraph Frontend
+        A[HTML/CSS/JS<br>RTL Arabic UI]
+    end
+    subgraph Backend
+        B[FastAPI + SSE]
+        C[Ingestion Pipeline]
+        D[Hybrid Retrieval]
+        E[Generation + Citations]
+    end
+    subgraph Storage
+        F[Qdrant<br>Vector Search]
+        G[Neo4j<br>Knowledge Graph]
+        H[Elasticsearch<br>BM25 Keyword]
+        I[Redis<br>Cache + Memory]
+        J[PostgreSQL<br>Sessions + Metadata]
+    end
+    A --> B
+    B --> D
+    D --> F & G & H
+    B --> E
+    E --> I
+    C --> F & G & H
+    B --> J
+```
+
+### End-to-End Pipeline
+
+The system implements a multi-stage pipeline:
+
+```mermaid
+graph TD
+    A[PDF/DOCX] --> B[BookExtractor]
+    B --> C[ArabicTextCleaner]
+    C --> D[FiqhChunker]
+    D --> E[GraphBuilder]
+    D --> F[VectorIndexer]
+    D --> G[KeywordIndexer]
+    E --> H[Neo4j]
+    F --> I[Qdrant]
+    G --> J[Elasticsearch]
+    
+    K[User Query] --> L[SemanticCache]
+    L -->|miss| M[QueryRewriter + IntentDetector]
+    M --> N[RetrievalEngine]
+    N --> O[VectorSearch]
+    N --> P[GraphSearch]
+    N --> Q[KeywordSearch]
+    O & P & Q --> R[RRF Fusion]
+    R --> S[ContextAssembler]
+    S --> T[FiqhGenerator]
+    T --> U[CitationLinker]
+    U --> V[SSE Response]
+```
+
+**Ingestion Pipeline** — PDF/DOCX extraction → Arabic text cleaning → Fiqh-aware structural chunking → LLM-driven knowledge graph construction → parallel vector (Qdrant) + keyword (Elasticsearch) indexing.
+
+**Query Processing** — HyDE query rewriting → multi-query expansion → intent detection (madhab, question type) → conversation memory with entity tracking.
+
+**Hybrid Retrieval** — Three parallel search paths (dense vector, graph traversal, BM25) fused via Reciprocal Rank Fusion (RRF) with optional cross-encoder reranking.
+
+**Generation** — Context assembly ordered by Fiqh type (hukm → dalil → khilaf → shurut) → LLM streaming with SSE → citation linking.
+
+**Caching** — Four-layer cache: semantic (cosine similarity), embedding (SHA256-keyed), graph result (entity+depth), and async prefetch via Celery.
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| API Framework | FastAPI + SSE Streaming |
+| Vector Database | Qdrant |
+| Graph Database | Neo4j |
+| Search Engine | Elasticsearch |
+| Cache / Memory | Redis |
+| Relational DB | PostgreSQL |
+| Embeddings | AraBERT (aubmindlab/bert-base-arabertv2) |
+| LLM | GPT-4o / Claude |
+| Task Queue | Celery |
+
+## Quick Start
+
+```bash
+# 1. Clone and install
+git clone https://github.com/MohammedHamza0/Faqih.ai.git
+cd Faqih.ai
+cp .env.example .env  # Add your API keys
+pip install -e ".[dev]"
+
+# 2. Start services
+docker-compose up -d
+
+# 3. Check health
+python scripts/healthcheck.py
+
+# 4. Ingest a book
+python scripts/ingest_book.py data/books/your-book.pdf \
+    --title "اسم الكتاب" --author "المؤلف" --madhab hanbali
+
+# 5. Start the API
+uvicorn src.faqih.api.app:create_app --factory --reload --port 8000
+```
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/sessions` | Create a new conversation session |
+| POST | `/sessions/{id}/query` | Query with SSE streaming response |
+| GET | `/sessions/{id}/history` | Get conversation history |
+| GET | `/chunks/{id}` | Get chunk detail for citation cards |
+| POST | `/admin/ingest` | Trigger book ingestion (auth required) |
+| GET | `/health` | Health check |
+
+## Project Structure
+
+```
+src/faqih/
+├── config.py              # Pydantic settings
+├── models/                # Schemas, enums, ORM
+├── ingestion/             # Extract → Clean → Chunk → Graph → Index
+├── retrieval/             # Vector + Graph + BM25 → RRF → Rerank
+├── generation/            # Context assembly → LLM → Citations
+├── memory/                # Redis conversation memory
+├── cache/                 # Semantic, embedding, graph, prefetch
+├── services/              # Neo4j, Qdrant, ES, Redis, LLM wrappers
+├── api/                   # FastAPI routes + dependencies
+└── worker/                # Celery task definitions
+```
+
+## License
+
+MIT
