@@ -1,0 +1,341 @@
+/* ─── Base Styles ────────────────────────────────────────── */
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+
+*::-webkit-scrollbar {
+    width: 6px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* ─── Islamic Geometric Background ──────────────────────── */
+
+.geometric-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    opacity: 0.03;
+    background-image:
+        radial-gradient(circle at 25% 25%, rgba(201, 168, 76, 0.3) 1px, transparent 1px),
+        radial-gradient(circle at 75% 75%, rgba(201, 168, 76, 0.3) 1px, transparent 1px),
+        linear-gradient(45deg, transparent 48%, rgba(201, 168, 76, 0.1) 49%, rgba(201, 168, 76, 0.1) 51%, transparent 52%),
+        linear-gradient(-45deg, transparent 48%, rgba(201, 168, 76, 0.1) 49%, rgba(201, 168, 76, 0.1) 51%, transparent 52%);
+    background-size: 60px 60px, 60px 60px, 40px 40px, 40px 40px;
+    pointer-events: none;
+}
+
+/* ─── Message Bubbles ───────────────────────────────────── */
+
+.message-user {
+    background: linear-gradient(135deg, rgba(201, 168, 76, 0.12), rgba(201, 168, 76, 0.06));
+    border: 1px solid rgba(201, 168, 76, 0.15);
+    border-radius: 1.25rem 1.25rem 0.5rem 1.25rem;
+    padding: 1rem 1.25rem;
+    max-width: 80%;
+    animation: messageSlideIn 0.3s ease-out;
+}
+
+.message-assistant {
+    background: rgba(26, 35, 50, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 1.25rem 1.25rem 1.25rem 0.5rem;
+    padding: 1.25rem 1.5rem;
+    max-width: 90%;
+    backdrop-filter: blur(12px);
+    animation: messageSlideIn 0.3s ease-out;
+}
+
+.message-assistant .response-text {
+    font-family: 'Noto Naskh Arabic', 'Amiri', serif;
+    font-size: 1.05rem;
+    line-height: 2;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.message-assistant .response-text strong,
+.message-assistant .response-text b {
+    color: #c9a84c;
+    font-weight: 600;
+}
+
+/* ─── Citation Badges ───────────────────────────────────── */
+
+.citation-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(201, 168, 76, 0.1);
+    border: 1px solid rgba(201, 168, 76, 0.2);
+    color: #c9a84c;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    font-family: 'Noto Sans Arabic', sans-serif;
+}
+
+.citation-badge:hover {
+    background: rgba(201, 168, 76, 0.2);
+    border-color: rgba(201, 168, 76, 0.4);
+    transform: translateY(-1px);
+}
+
+/* ─── Suggestion Cards ──────────────────────────────────── */
+
+.suggestion-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: 1rem;
+    background: rgba(26, 35, 50, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-align: right;
+}
+
+.suggestion-card:hover {
+    background: rgba(26, 35, 50, 0.8);
+    border-color: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* ─── Input Glow ────────────────────────────────────────── */
+
+.input-glow {
+    background: linear-gradient(135deg, rgba(201, 168, 76, 0.08), transparent, rgba(16, 185, 129, 0.05));
+    filter: blur(20px);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+#query-input:focus~.input-glow,
+.input-glow:has(~ div textarea:focus) {
+    opacity: 1;
+}
+
+/* ─── Session Item ──────────────────────────────────────── */
+
+.session-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.session-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.session-item.active {
+    background: rgba(201, 168, 76, 0.08);
+    border-color: rgba(201, 168, 76, 0.15);
+}
+
+/* ─── Typing Indicator ──────────────────────────────────── */
+
+.typing-indicator {
+    display: flex;
+    gap: 0.35rem;
+    padding: 0.5rem;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(201, 168, 76, 0.5);
+    animation: typingBounce 1.4s ease-in-out infinite;
+}
+
+.typing-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+/* ─── Source Card in Message ────────────────────────────── */
+
+.sources-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.source-card {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.85rem;
+    border-radius: 0.75rem;
+    background: rgba(201, 168, 76, 0.06);
+    border: 1px solid rgba(201, 168, 76, 0.12);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.8rem;
+    font-family: 'Noto Sans Arabic', sans-serif;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.source-card:hover {
+    background: rgba(201, 168, 76, 0.12);
+    border-color: rgba(201, 168, 76, 0.25);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.source-card .source-icon {
+    color: #c9a84c;
+}
+
+/* ─── Intent Badge ──────────────────────────────────────── */
+
+.intent-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-family: 'Noto Sans Arabic', sans-serif;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    margin-bottom: 0.75rem;
+}
+
+/* ─── Animations ────────────────────────────────────────── */
+
+@keyframes messageSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes typingBounce {
+
+    0%,
+    60%,
+    100% {
+        transform: translateY(0);
+    }
+
+    30% {
+        transform: translateY(-6px);
+    }
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+.animate-float {
+    animation: float 4s ease-in-out infinite;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* ─── Responsive ────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+    #sidebar {
+        position: fixed;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 40;
+        transform: translateX(100%);
+    }
+
+    #sidebar.open {
+        transform: translateX(0);
+    }
+}
+
+@media (max-width: 640px) {
+
+    .message-user,
+    .message-assistant {
+        max-width: 95%;
+    }
+}
+
+/* ─── Markdown in Responses ─────────────────────────────── */
+
+.response-text h3 {
+    color: #c9a84c;
+    font-weight: 700;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.response-text ul,
+.response-text ol {
+    padding-right: 1.25rem;
+    margin: 0.5rem 0;
+}
+
+.response-text li {
+    margin-bottom: 0.35rem;
+}
+
+.response-text p {
+    margin-bottom: 0.5rem;
+}
+
+.response-text code {
+    background: rgba(255, 255, 255, 0.06);
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.9em;
+}

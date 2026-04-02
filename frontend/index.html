@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الفقيه — نظام الفقه الإسلامي الذكي</title>
+    <meta name="description"
+        content="نظام ذكي للإجابة على الأسئلة الفقهية بالاستناد إلى كتب الفقه المعتمدة مع ذكر المصادر والأدلة">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            900: '#0a0f1f',
+                            800: '#0f172a',
+                            700: '#1a2332',
+                            600: '#243044',
+                            500: '#334155',
+                        },
+                        gold: {
+                            50: '#fff9eb',
+                            100: '#ffefc2',
+                            200: '#ffe099',
+                            300: '#ffd066',
+                            400: '#c9a84c',
+                            500: '#b8962e',
+                            600: '#9a7b1e',
+                        },
+                        emerald: {
+                            400: '#34d399',
+                            500: '#10b981',
+                        }
+                    },
+                    fontFamily: {
+                        arabic: ['Noto Naskh Arabic', 'Amiri', 'serif'],
+                        sans: ['Inter', 'Noto Sans Arabic', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="bg-navy-900 text-white font-sans min-h-screen overflow-hidden">
+
+    <!-- Geometric Background Pattern -->
+    <div class="geometric-bg"></div>
+
+    <!-- Main Layout -->
+    <div class="relative z-10 flex h-screen">
+
+        <!-- ════ Sidebar ════ -->
+        <aside id="sidebar"
+            class="w-80 bg-navy-800/80 backdrop-blur-xl border-l border-white/5 flex flex-col transition-all duration-300">
+
+            <!-- Logo -->
+            <div class="p-6 border-b border-white/5">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-12 h-12 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center shadow-lg shadow-gold-500/20">
+                        <svg class="w-7 h-7 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="2">
+                            <path
+                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold font-arabic text-gold-300">الفقيه</h1>
+                        <p class="text-xs text-white/40">Al-Faqih AI</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Chat Button -->
+            <div class="p-4">
+                <button onclick="createNewSession()"
+                    class="w-full py-3 px-4 rounded-xl bg-gold-500/10 border border-gold-500/20 text-gold-300 hover:bg-gold-500/20 transition-all duration-200 flex items-center justify-center gap-2 group">
+                    <svg class="w-5 h-5 group-hover:rotate-90 transition-transform" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
+                        <path d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span class="font-medium">محادثة جديدة</span>
+                </button>
+            </div>
+
+            <!-- Session List -->
+            <div class="flex-1 overflow-y-auto px-4 space-y-1 scrollbar-thin" id="session-list">
+                <!-- Sessions populated by JS -->
+            </div>
+
+            <!-- Footer -->
+            <div class="p-4 border-t border-white/5">
+                <div class="flex items-center gap-2 text-white/30 text-xs">
+                    <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                    <span>Hybrid RAG — الاسترجاع الهجين</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ════ Main Chat Area ════ -->
+        <main class="flex-1 flex flex-col min-w-0">
+
+            <!-- Header -->
+            <header
+                class="h-16 bg-navy-800/50 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-6 shrink-0">
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 hover:bg-white/5 rounded-lg">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                    <h2 class="text-sm text-white/60 font-arabic" id="header-title">اسأل أي سؤال فقهي...</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div id="status-badge"
+                        class="hidden items-center gap-1.5 px-3 py-1 rounded-full bg-gold-500/10 border border-gold-500/20 text-gold-300 text-xs">
+                        <div class="w-1.5 h-1.5 rounded-full bg-gold-400 animate-pulse"></div>
+                        <span id="status-text">جارٍ البحث...</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Messages Area -->
+            <div class="flex-1 overflow-y-auto px-4 md:px-8 lg:px-16 xl:px-24 py-6 space-y-6 scrollbar-thin"
+                id="messages-container">
+
+                <!-- Welcome Screen (shown when no messages) -->
+                <div id="welcome-screen" class="flex flex-col items-center justify-center h-full text-center">
+                    <div
+                        class="w-20 h-20 rounded-2xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center mb-6 shadow-2xl shadow-gold-500/20 animate-float">
+                        <svg class="w-10 h-10 text-navy-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="1.5">
+                            <path
+                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                    </div>
+                    <h2 class="text-3xl font-bold font-arabic text-gold-300 mb-2">مرحباً بك في الفقيه</h2>
+                    <p class="text-white/40 max-w-md mb-10 leading-relaxed">نظام ذكي للإجابة على أسئلتك الفقهية
+                        بالاستناد إلى كتب الفقه المعتمدة في المذاهب الأربعة مع ذكر المصادر والأدلة</p>
+
+                    <!-- Suggestion Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl w-full">
+                        <button onclick="sendSuggestion('ما حكم الماء المستعمل في الطهارة؟')"
+                            class="suggestion-card group">
+                            <div
+                                class="p-1 rounded-lg bg-gold-500/10 text-gold-400 group-hover:bg-gold-500/20 transition-colors">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-width="1.5"
+                                        d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+                                </svg>
+                            </div>
+                            <span class="text-sm text-white/70 group-hover:text-white/90 text-right font-arabic">ما حكم
+                                الماء المستعمل في الطهارة؟</span>
+                        </button>
+                        <button onclick="sendSuggestion('ما الفرق بين المذاهب في حكم المسح على الخفين؟')"
+                            class="suggestion-card group">
+                            <div
+                                class="p-1 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/20 transition-colors">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-width="1.5"
+                                        d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                                </svg>
+                            </div>
+                            <span class="text-sm text-white/70 group-hover:text-white/90 text-right font-arabic">ما
+                                الفرق بين المذاهب في المسح على الخفين؟</span>
+                        </button>
+                        <button onclick="sendSuggestion('ما هي شروط صحة الصلاة عند الشافعية؟')"
+                            class="suggestion-card group">
+                            <div
+                                class="p-1 rounded-lg bg-blue-500/10 text-blue-400 group-hover:bg-blue-500/20 transition-colors">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-width="1.5"
+                                        d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                                </svg>
+                            </div>
+                            <span class="text-sm text-white/70 group-hover:text-white/90 text-right font-arabic">ما هي
+                                شروط صحة الصلاة عند الشافعية؟</span>
+                        </button>
+                        <button onclick="sendSuggestion('ما حكم زكاة الذهب المستعمل للزينة؟')"
+                            class="suggestion-card group">
+                            <div
+                                class="p-1 rounded-lg bg-purple-500/10 text-purple-400 group-hover:bg-purple-500/20 transition-colors">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-width="1.5"
+                                        d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <span class="text-sm text-white/70 group-hover:text-white/90 text-right font-arabic">ما حكم
+                                زكاة الذهب المستعمل للزينة؟</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div
+                class="shrink-0 p-4 md:px-8 lg:px-16 xl:px-24 bg-gradient-to-t from-navy-900 via-navy-900/95 to-transparent pt-8">
+                <div class="relative max-w-4xl mx-auto">
+                    <div class="input-glow absolute inset-0 rounded-2xl"></div>
+                    <div
+                        class="relative bg-navy-700/80 backdrop-blur-xl rounded-2xl border border-white/10 flex items-end p-2">
+                        <textarea id="query-input" placeholder="اكتب سؤالك الفقهي هنا..." rows="1"
+                            class="flex-1 bg-transparent border-none outline-none text-white placeholder-white/30 resize-none px-4 py-3 font-arabic text-base leading-relaxed max-h-40"
+                            onkeydown="handleKeyDown(event)" oninput="autoResize(this)"></textarea>
+                        <button id="send-btn" onclick="sendMessage()"
+                            class="p-3 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 text-navy-900 hover:shadow-lg hover:shadow-gold-500/25 transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed mr-1"
+                            disabled>
+                            <svg class="w-5 h-5 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="text-center text-white/20 text-xs mt-3">الفقيه — يستند إلى كتب الفقه المعتمدة ● لا يُغني
+                        عن سؤال أهل العلم</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Citation Modal -->
+    <div id="citation-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm"
+        onclick="closeCitationModal(event)">
+        <div class="bg-navy-700 border border-white/10 rounded-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden shadow-2xl"
+            onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between p-5 border-b border-white/10">
+                <h3 class="text-lg font-bold font-arabic text-gold-300" id="citation-title">المصدر</h3>
+                <button onclick="closeCitationModal()" class="p-1 hover:bg-white/5 rounded-lg">
+                    <svg class="w-5 h-5 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="p-5 overflow-y-auto max-h-[60vh]" id="citation-content">
+                <!-- Citation content populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
