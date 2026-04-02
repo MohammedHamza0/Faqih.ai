@@ -71,8 +71,8 @@ class Neo4jClient:
     ):
         """Create a relationship between two nodes by element ID."""
         query = (
-            "MATCH (a), (b) "
-            "WHERE elementId(a) = $source_id AND elementId(b) = $target_id "
+            "MATCH (a) WHERE elementId(a) = $source_id "
+            "MATCH (b) WHERE elementId(b) = $target_id "
             f"CREATE (a)-[r:{rel_type} $props]->(b) "
             "RETURN type(r)"
         )
