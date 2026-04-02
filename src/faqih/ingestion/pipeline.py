@@ -22,7 +22,7 @@ from faqih.models.enums import Madhab
 from faqih.models.schemas import BookMetadata
 from faqih.services.elasticsearch_client import ElasticsearchService
 from faqih.services.embedding import EmbeddingService
-from faqih.services.llm import LLMClient
+from faqih.services.llm import LLMClient, create_provider
 from faqih.services.neo4j_client import Neo4jClient
 from faqih.services.qdrant_client import QdrantService
 
@@ -82,17 +82,34 @@ class IngestionPipeline:
         self._embedding.load()
 
         # Initialize LLM client
-        api_key = {
-            "google": s.google_api_key,
-            "openai": s.openai_api_key,
-            "anthropic": s.anthropic_api_key,
-        }.get(s.llm_provider, s.google_api_key)
-        self._llm = LLMClient(
-            provider=s.llm_provider,
+        provider_config = {
+            "google": (s.google_api_key, s.google_model),
+            "openai": (s.openai_api_key, s.openai_model),
+            "groq": (s.groq_api_key, s.groq_model),
+            "openrouter": (s.openrouter_api_key, s.openrouter_model),
+            "cohere": (s.cohere_api_key, s.cohere_model),
+        }
+        primary_key, _ = provider_config.get(s.llm_provider, ("", ""))
+        primary = create_provider(
+            name=s.llm_provider,
+            api_key=primary_key,
             model=s.llm_model,
-            api_key=api_key,
             temperature=s.llm_temperature,
+            max_tokens=s.llm_max_tokens,
         )
+
+        fallbacks = []
+        for name in [n.strip() for n in s.llm_fallback_providers.split(",") if n.strip()]:
+            if name == s.llm_provider:
+                continue
+            api_key, model = provider_config.get(name, ("", ""))
+            if api_key:
+                fallbacks.append(
+                    create_provider(name=name, api_key=api_key, model=model,
+                                    temperature=s.llm_temperature, max_tokens=s.llm_max_tokens)
+                )
+
+        self._llm = LLMClient(primary=primary, fallbacks=fallbacks)
 
         # Initialize pipeline components
         self._graph_builder = GraphBuilder(self._llm, self._neo4j)

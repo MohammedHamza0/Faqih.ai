@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -211,8 +212,10 @@ class GraphBuilder:
 
         for i in range(0, len(chunks), batch_size):
             batch = chunks[i : i + batch_size]
-            for chunk in batch:
-                entities, rels = await self.process_chunk(chunk)
+            results = await asyncio.gather(
+                *(self.process_chunk(chunk) for chunk in batch)
+            )
+            for entities, rels in results:
                 all_entities.extend(entities)
                 all_relationships.extend(rels)
             logger.info("Processed graph batch %d/%d", i + batch_size, len(chunks))

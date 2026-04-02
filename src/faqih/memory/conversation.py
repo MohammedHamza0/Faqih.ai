@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from faqih.models.schemas import ConversationTurn, Session
 from faqih.services.redis_client import RedisService
@@ -82,7 +82,7 @@ class ConversationMemory:
         if entities:
             entities_key = self.ENTITIES_KEY.format(session_id=session_id)
             for entity in entities:
-                await self._redis.hset(entities_key, entity, datetime.utcnow().isoformat())
+                await self._redis.hset(entities_key, entity, datetime.now(timezone.utc).isoformat())
             await self._redis.expire(entities_key, self._ttl)
 
     async def get_recent_turns(self, session_id: str) -> list[ConversationTurn]:

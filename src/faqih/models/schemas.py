@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -75,7 +75,7 @@ class BookMetadata(BaseModel):
     file_path: str
     total_pages: int = 0
     total_chunks: int = 0
-    ingested_at: datetime = Field(default_factory=datetime.utcnow)
+    ingested_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 # ─── Query & Conversation Schemas ───────────────────────────
@@ -98,7 +98,7 @@ class ConversationTurn(BaseModel):
 
     role: str = Field(description="'user' or 'assistant'")
     content: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     entities_mentioned: list[str] = Field(default_factory=list)
     chunk_ids_cited: list[str] = Field(default_factory=list)
 
@@ -108,7 +108,7 @@ class Session(BaseModel):
 
     session_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     turns: list[ConversationTurn] = Field(default_factory=list)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     entity_history: list[str] = Field(
         default_factory=list,
         description="Entities mentioned across the session",

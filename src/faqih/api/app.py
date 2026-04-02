@@ -12,7 +12,7 @@ from faqih.config import get_settings
 from faqih.models.database import create_db_engine, create_session_factory, init_db
 from faqih.services.elasticsearch_client import ElasticsearchService
 from faqih.services.embedding import EmbeddingService
-from faqih.services.llm import LLMClient
+from faqih.services.llm import LLMClient, create_provider
 from faqih.services.neo4j_client import Neo4jClient
 from faqih.services.qdrant_client import QdrantService
 from faqih.services.redis_client import RedisService
@@ -46,19 +46,49 @@ async def lifespan(app: FastAPI):
     embedding = EmbeddingService(settings.embedding_model)
     embedding.load()
 
-    # LLM client
-    api_key = {
-        "google": settings.google_api_key,
-        "openai": settings.openai_api_key,
-        "anthropic": settings.anthropic_api_key,
-    }.get(settings.llm_provider, settings.google_api_key)
-    llm = LLMClient(
-        provider=settings.llm_provider,
-        model=settings.llm_model,
-        api_key=api_key,
+    # ── LLM Client with failover chain ──────────────────
+    # Map provider names to their API keys and default models
+    provider_config = {
+        "google": (settings.google_api_key, settings.google_model),
+        "openai": (settings.openai_api_key, settings.openai_model),
+        "groq": (settings.groq_api_key, settings.groq_model),
+        "openrouter": (settings.openrouter_api_key, settings.openrouter_model),
+        "cohere": (settings.cohere_api_key, settings.cohere_model),
+    }
+
+    # Build primary provider
+    primary_key, primary_model = provider_config.get(
+        settings.llm_provider, ("", settings.llm_model)
+    )
+    primary = create_provider(
+        name=settings.llm_provider,
+        api_key=primary_key,
+        model=settings.llm_model,  # Use the explicit LLM_MODEL for primary
         temperature=settings.llm_temperature,
         max_tokens=settings.llm_max_tokens,
     )
+
+    # Build fallback chain (only providers with API keys set)
+    fallbacks = []
+    fallback_names = [
+        n.strip() for n in settings.llm_fallback_providers.split(",") if n.strip()
+    ]
+    for name in fallback_names:
+        if name == settings.llm_provider:
+            continue  # Skip primary
+        api_key, model = provider_config.get(name, ("", ""))
+        if api_key:  # Only add providers with configured keys
+            fallbacks.append(
+                create_provider(
+                    name=name,
+                    api_key=api_key,
+                    model=model,
+                    temperature=settings.llm_temperature,
+                    max_tokens=settings.llm_max_tokens,
+                )
+            )
+
+    llm = LLMClient(primary=primary, fallbacks=fallbacks)
 
     # Store in app state
     app.state.neo4j = neo4j

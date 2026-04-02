@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
 from faqih.api.dependencies import verify_admin_key
@@ -24,7 +24,7 @@ class IngestRequest(BaseModel):
 
 
 @router.post("/ingest", dependencies=[Depends(verify_admin_key)])
-async def ingest_book(body: IngestRequest):
+async def ingest_book(body: IngestRequest, request: Request):
     """
     Trigger the ingestion pipeline for a new book.
 
@@ -34,7 +34,7 @@ async def ingest_book(body: IngestRequest):
     if not file_path.exists():
         raise HTTPException(status_code=400, detail=f"File not found: {body.file_path}")
 
-    pipeline = IngestionPipeline()
+    pipeline = IngestionPipeline(settings=request.app.state.settings)
     try:
         await pipeline.setup(recreate_indexes=body.recreate_indexes)
         metadata = await pipeline.ingest_book(

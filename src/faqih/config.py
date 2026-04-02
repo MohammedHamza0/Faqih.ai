@@ -21,7 +21,9 @@ class Settings(BaseSettings):
     # ── LLM API Keys ────────────────────────────────────────
     google_api_key: str = ""
     openai_api_key: str = ""
-    anthropic_api_key: str = ""
+    groq_api_key: str = ""
+    openrouter_api_key: str = ""
+    cohere_api_key: str = ""
 
     # ── Neo4j ────────────────────────────────────────────────
     neo4j_uri: str = "bolt://localhost:7687"
@@ -49,10 +51,18 @@ class Settings(BaseSettings):
     embedding_dim: int = 768
 
     # ── LLM Settings ────────────────────────────────────────
-    llm_provider: str = "google"  # "google" | "openai" | "anthropic"
+    llm_provider: str = "google"
     llm_model: str = "gemini-2.0-flash"
     llm_temperature: float = 0.3
     llm_max_tokens: int = 4096
+    llm_fallback_providers: str = "groq,openrouter,cohere,openai"
+
+    # Default models per provider (used by failover chain)
+    groq_model: str = "llama-3.3-70b-versatile"
+    openrouter_model: str = "google/gemini-2.0-flash-exp"
+    cohere_model: str = "command-a-03-2025"
+    openai_model: str = "gpt-4o"
+    google_model: str = "gemini-2.0-flash"
 
     # ── Retrieval Settings ──────────────────────────────────
     retrieval_top_k: int = 20

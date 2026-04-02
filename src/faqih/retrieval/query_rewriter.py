@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from faqih.services.embedding import EmbeddingService
@@ -103,6 +104,3 @@ class QueryRewriter:
             "hyde_embedding": hyde_embedding,
             "expanded_queries": expanded,
         }
-
-
-import asyncio  # noqa: E402 — needed for gather in rewrite()

@@ -57,6 +57,9 @@ def prefetch_related_masail(entity_ids: list[str], depth: int = 2):
         cache = GraphCache(redis)
 
         try:
+            # Clamp depth to safe range (Cypher doesn't support parameterized depth)
+            depth = max(1, min(depth, 5))
+
             # Check if already cached
             cached = await cache.get(entity_ids, depth)
             if cached:

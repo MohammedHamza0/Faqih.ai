@@ -162,7 +162,7 @@ async function sendMessage() {
         const response = await fetch(`${API_BASE}/sessions/${currentSessionId}/query`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query: text, session_id: currentSessionId }),
+            body: JSON.stringify({ query: text }),
             signal: currentController.signal
         });
 

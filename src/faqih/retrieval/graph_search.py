@@ -44,6 +44,9 @@ class GraphSearcher:
         if not query_entities:
             return []
 
+        # Clamp depth to safe range (Cypher doesn't support parameterized depth)
+        max_depth = max(1, min(max_depth, 5))
+
         # Step 1: Find matching entity nodes
         entity_match_query = """
         UNWIND $entities AS entity_text

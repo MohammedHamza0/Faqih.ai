@@ -25,6 +25,7 @@ from faqih.memory.conversation import ConversationMemory
 from faqih.retrieval.engine import RetrievalEngine
 from faqih.retrieval.intent_detector import IntentDetector
 from faqih.retrieval.query_rewriter import QueryRewriter
+from faqih.services.llm import LLMExhaustedError
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,6 @@ class QueryRequest(BaseModel):
     """Request body for the query endpoint."""
 
     query: str
-    session_id: str
 
 
 @router.post("/sessions/{session_id}/query")
@@ -143,9 +143,16 @@ async def query_endpoint(
 
             yield "data: [DONE]\n\n"
 
+        except LLMExhaustedError:
+            logger.error("All LLM providers exhausted for query: %s", query_text[:100])
+            error_msg = "عذرًا، الخدمة غير متاحة حاليًا. نعمل على حل المشكلة، يرجى المحاولة لاحقًا."
+            yield f"data: {json.dumps({'type': 'error', 'content': error_msg}, ensure_ascii=False)}\n\n"
+            yield "data: [DONE]\n\n"
+
         except Exception as e:
             logger.error("Query pipeline error: %s", e, exc_info=True)
-            yield f"data: {json.dumps({'type': 'error', 'content': str(e)}, ensure_ascii=False)}\n\n"
+            error_msg = "حدث خطأ أثناء معالجة السؤال. يرجى المحاولة مرة أخرى."
+            yield f"data: {json.dumps({'type': 'error', 'content': error_msg}, ensure_ascii=False)}\n\n"
             yield "data: [DONE]\n\n"
 
     return StreamingResponse(process_and_stream(), media_type="text/event-stream")

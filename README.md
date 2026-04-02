@@ -17,6 +17,13 @@ graph LR
         D[Hybrid Retrieval]
         E[Generation + Citations]
     end
+    subgraph LLM Providers
+        L1[Google Gemini]
+        L2[Groq Cloud]
+        L3[OpenRouter]
+        L4[Cohere]
+        L5[OpenAI]
+    end
     subgraph Storage
         F[Qdrant<br>Vector Search]
         G[Neo4j<br>Knowledge Graph]
@@ -28,9 +35,33 @@ graph LR
     B --> D
     D --> F & G & H
     B --> E
+    E -->|failover chain| L1
+    L1 -.->|on error| L2
+    L2 -.->|on error| L3
+    L3 -.->|on error| L4
+    L4 -.->|on error| L5
     E --> I
     C --> F & G & H
     B --> J
+```
+
+### LLM Failover Chain
+
+The system supports multiple LLM providers with automatic failover. If the primary provider fails (quota exceeded, timeout, or any error), the request is transparently retried with the next provider. All failures are logged to `logs/llm_errors.log`.
+
+```mermaid
+graph LR
+    Q[Query] --> P1[Google Gemini]
+    P1 -->|success| R[Response]
+    P1 -.->|error| P2[Groq Cloud]
+    P2 -->|success| R
+    P2 -.->|error| P3[OpenRouter]
+    P3 -->|success| R
+    P3 -.->|error| P4[Cohere]
+    P4 -->|success| R
+    P4 -.->|error| P5[OpenAI]
+    P5 -->|success| R
+    P5 -.->|all failed| ERR[Error Logged + User Notified]
 ```
 
 ### End-to-End Pipeline
@@ -83,7 +114,8 @@ graph TD
 | Cache / Memory | Redis |
 | Relational DB | PostgreSQL |
 | Embeddings | AraBERT (aubmindlab/bert-base-arabertv2) |
-| LLM | GPT-4o / Claude |
+| LLM Providers | Google Gemini, Groq, OpenRouter, Cohere, OpenAI |
+| LLM Failover | Automatic chain with error logging |
 | Task Queue | Celery |
 
 ## Quick Start
@@ -107,6 +139,11 @@ python scripts/ingest_book.py data/books/your-book.pdf \
 
 # 5. Start the API
 uvicorn src.faqih.api.app:create_app --factory --reload --port 8000
+
+# 6. Start the frontend (in a new terminal)
+cd frontend
+python -m http.server 3000
+# Open http://localhost:3000 in your browser
 ```
 
 ## API Endpoints
