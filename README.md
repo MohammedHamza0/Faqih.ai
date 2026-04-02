@@ -17,12 +17,9 @@ graph LR
         D[Hybrid Retrieval]
         E[Generation + Citations]
     end
-    subgraph LLM Providers
-        L1[Google Gemini]
-        L2[Groq Cloud]
-        L3[OpenRouter]
-        L4[Cohere]
-        L5[OpenAI]
+    subgraph Local LLMs
+        L1[Ollama: Qwen3 8B]
+        L2[Ollama: Llama 3.2]
     end
     subgraph Storage
         F[Qdrant<br>Vector Search]
@@ -37,31 +34,22 @@ graph LR
     B --> E
     E -->|failover chain| L1
     L1 -.->|on error| L2
-    L2 -.->|on error| L3
-    L3 -.->|on error| L4
-    L4 -.->|on error| L5
     E --> I
     C --> F & G & H
     B --> J
 ```
 
-### LLM Failover Chain
+### Local LLM Failover Chain
 
-The system supports multiple LLM providers with automatic failover. If the primary provider fails (quota exceeded, timeout, or any error), the request is transparently retried with the next provider. All failures are logged to `logs/llm_errors.log`.
+The system supports local LLMs powered by Ollama with automatic failover. If the primary local model fails (e.g. timeout or context window exceeded), the request is transparently retried with the fallback model. All failures are logged to `logs/llm_errors.log`.
 
 ```mermaid
 graph LR
-    Q[Query] --> P1[Google Gemini]
+    Q[Query] --> P1[Ollama: Qwen3 8B]
     P1 -->|success| R[Response]
-    P1 -.->|error| P2[Groq Cloud]
+    P1 -.->|error| P2[Ollama: Llama 3.2]
     P2 -->|success| R
-    P2 -.->|error| P3[OpenRouter]
-    P3 -->|success| R
-    P3 -.->|error| P4[Cohere]
-    P4 -->|success| R
-    P4 -.->|error| P5[OpenAI]
-    P5 -->|success| R
-    P5 -.->|all failed| ERR[Error Logged + User Notified]
+    P2 -.->|all failed| ERR[Error Logged + User Notified]
 ```
 
 ### End-to-End Pipeline
@@ -114,8 +102,8 @@ graph TD
 | Cache / Memory | Redis |
 | Relational DB | PostgreSQL |
 | Embeddings | AraBERT (aubmindlab/bert-base-arabertv2) |
-| LLM Providers | Google Gemini, Groq, OpenRouter, Cohere, OpenAI |
-| LLM Failover | Automatic chain with error logging |
+| Local LLMs | Ollama (qwen3:8b, llama3.2) |
+| LLM Failover | Automatic local model failover |
 | Task Queue | Celery |
 
 ## Quick Start
@@ -124,7 +112,7 @@ graph TD
 # 1. Clone and install
 git clone https://github.com/MohammedHamza0/Faqih.ai.git
 cd Faqih.ai
-cp .env.example .env  # Add your API keys
+cp .env.example .env  # Setup Ollama configuration
 pip install -e ".[dev]"
 
 # 2. Start services
