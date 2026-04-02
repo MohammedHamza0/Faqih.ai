@@ -34,8 +34,8 @@ class Settings(BaseSettings):
 
     # ── Qdrant ───────────────────────────────────────────────
     qdrant_host: str = "localhost"
-    qdrant_port: int = 6333
-    qdrant_grpc_port: int = 6334
+    qdrant_port: int = 8333
+    qdrant_grpc_port: int = 8334
     qdrant_collection: str = "fiqh_chunks"
 
     # ── Elasticsearch ────────────────────────────────────────
@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     elasticsearch_index: str = "fiqh_chunks"
 
     # ── Redis ────────────────────────────────────────────────
-    redis_url: str = "redis://localhost:6379/0"
+    redis_url: str = "redis://localhost:8379/0"
 
     # ── PostgreSQL ───────────────────────────────────────────
     database_url: str = "postgresql+asyncpg://faqih:faqih_pg_2024@localhost:5432/faqih"

@@ -102,7 +102,7 @@ class OllamaProvider(LLMProvider):
     ):
         super().__init__(f"ollama/{model}", model, temperature, max_tokens)
         self._base_url = base_url.rstrip("/")
-        self._client = httpx.AsyncClient(base_url=self._base_url, timeout=120.0)
+        self._client = httpx.AsyncClient(base_url=self._base_url, timeout=None)
 
     async def complete(
         self, messages, temperature=None, max_tokens=None, json_mode=False
