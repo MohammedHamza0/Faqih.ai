@@ -1,4 +1,4 @@
-# Al-Ijtihad — Faqih.ai
+# Faqih.ai
 
 An Islamic Jurisprudence (Fiqh) hybrid RAG system combining vector search, knowledge graphs, and BM25 keyword matching for comprehensive, citation-backed answers across classical Fiqh texts.
 
