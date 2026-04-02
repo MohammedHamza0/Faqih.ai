@@ -34,11 +34,8 @@ dependencies = [
     # Cache & Message Broker
     "redis>=5.0.0",
     "celery[redis]>=5.4.0",
-    # LLM Clients
-    "google-generativeai>=0.8.0",
-    "openai>=1.40.0",
-    "groq>=0.9.0",
-    "cohere>=5.0.0",
+    # LLM (via Ollama — uses httpx already listed above)
+
     # Data Validation
     "pydantic>=2.8.0",
     "pydantic-settings>=2.4.0",

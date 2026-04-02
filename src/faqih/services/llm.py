@@ -1,8 +1,8 @@
-"""LLM client abstraction with multi-provider failover.
+"""LLM client abstraction with Ollama backend.
 
-Supports: Google Gemini, OpenAI, Groq, OpenRouter, Cohere.
-Automatically fails over to the next provider on ANY error
-(quota exhaustion, timeouts, connection errors, etc.).
+Uses local Ollama models (qwen3:8b, llama3.2, etc.) via the
+native Ollama REST API at http://localhost:11434.
+Supports automatic failover between local models.
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, AsyncIterator
 
-import google.generativeai as genai
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -87,210 +87,92 @@ class LLMProvider(ABC):
         return f"{self.__class__.__name__}(model={self.model!r})"
 
 
-# ─── Google Gemini Provider ────────────────────────────────
+# ─── Ollama Provider ───────────────────────────────────────
 
 
-class GeminiProvider(LLMProvider):
-    """Google Gemini via google-generativeai SDK."""
-
-    def __init__(self, api_key: str, model: str, temperature: float, max_tokens: int):
-        super().__init__("google", model, temperature, max_tokens)
-        genai.configure(api_key=api_key)
-        self._model_instance = genai.GenerativeModel(model)
-
-    @staticmethod
-    def _to_gemini_format(messages: list[dict[str, str]]) -> tuple[str, list[dict]]:
-        """Convert OpenAI-style messages to Gemini format."""
-        system_instruction = ""
-        contents = []
-        for msg in messages:
-            role = msg["role"]
-            text = msg["content"]
-            if role == "system":
-                system_instruction = text
-            elif role == "assistant":
-                contents.append({"role": "model", "parts": [text]})
-            else:
-                contents.append({"role": "user", "parts": [text]})
-        return system_instruction, contents
-
-    async def complete(self, messages, temperature=None, max_tokens=None, json_mode=False) -> str:
-        temp = temperature if temperature is not None else self.temperature
-        tokens = max_tokens or self.max_tokens
-        system_instruction, contents = self._to_gemini_format(messages)
-
-        generation_config = genai.GenerationConfig(temperature=temp, max_output_tokens=tokens)
-        if json_mode:
-            generation_config.response_mime_type = "application/json"
-
-        model = self._model_instance
-        if system_instruction:
-            model = genai.GenerativeModel(self.model, system_instruction=system_instruction)
-
-        response = await model.generate_content_async(contents, generation_config=generation_config)
-        return response.text or ""
-
-    async def stream(self, messages, temperature=None, max_tokens=None) -> AsyncIterator[str]:
-        temp = temperature if temperature is not None else self.temperature
-        tokens = max_tokens or self.max_tokens
-        system_instruction, contents = self._to_gemini_format(messages)
-
-        generation_config = genai.GenerationConfig(temperature=temp, max_output_tokens=tokens)
-
-        model = self._model_instance
-        if system_instruction:
-            model = genai.GenerativeModel(self.model, system_instruction=system_instruction)
-
-        response = await model.generate_content_async(
-            contents, generation_config=generation_config, stream=True
-        )
-        async for chunk in response:
-            if chunk.text:
-                yield chunk.text
-
-
-# ─── OpenAI-Compatible Provider (OpenAI, Groq, OpenRouter) ─
-
-
-class OpenAICompatibleProvider(LLMProvider):
-    """Provider for any OpenAI-compatible API (OpenAI, Groq, OpenRouter)."""
+class OllamaProvider(LLMProvider):
+    """Local Ollama provider via native REST API (/api/chat)."""
 
     def __init__(
         self,
-        name: str,
-        api_key: str,
         model: str,
         temperature: float,
         max_tokens: int,
-        base_url: str | None = None,
-        default_headers: dict[str, str] | None = None,
+        base_url: str = "http://localhost:11434",
     ):
-        super().__init__(name, model, temperature, max_tokens)
-        from openai import AsyncOpenAI
+        super().__init__(f"ollama/{model}", model, temperature, max_tokens)
+        self._base_url = base_url.rstrip("/")
+        self._client = httpx.AsyncClient(base_url=self._base_url, timeout=120.0)
 
-        kwargs: dict[str, Any] = {"api_key": api_key}
-        if base_url:
-            kwargs["base_url"] = base_url
-        if default_headers:
-            kwargs["default_headers"] = default_headers
-
-        self._client = AsyncOpenAI(**kwargs)
-
-    async def complete(self, messages, temperature=None, max_tokens=None, json_mode=False) -> str:
+    async def complete(
+        self, messages, temperature=None, max_tokens=None, json_mode=False
+    ) -> str:
         temp = temperature if temperature is not None else self.temperature
         tokens = max_tokens or self.max_tokens
 
-        kwargs: dict[str, Any] = {
+        payload: dict[str, Any] = {
             "model": self.model,
             "messages": messages,
-            "temperature": temp,
-            "max_tokens": tokens,
+            "stream": False,
+            "options": {
+                "temperature": temp,
+                "num_predict": tokens,
+            },
         }
         if json_mode:
-            kwargs["response_format"] = {"type": "json_object"}
+            payload["format"] = "json"
 
-        response = await self._client.chat.completions.create(**kwargs)
-        return response.choices[0].message.content or ""
+        response = await self._client.post("/api/chat", json=payload)
+        response.raise_for_status()
+        data = response.json()
+        return data.get("message", {}).get("content", "")
 
-    async def stream(self, messages, temperature=None, max_tokens=None) -> AsyncIterator[str]:
+    async def stream(
+        self, messages, temperature=None, max_tokens=None
+    ) -> AsyncIterator[str]:
         temp = temperature if temperature is not None else self.temperature
         tokens = max_tokens or self.max_tokens
 
-        stream = await self._client.chat.completions.create(
-            model=self.model,
-            messages=messages,
-            temperature=temp,
-            max_tokens=tokens,
-            stream=True,
-        )
-        async for chunk in stream:
-            delta = chunk.choices[0].delta
-            if delta.content:
-                yield delta.content
+        payload: dict[str, Any] = {
+            "model": self.model,
+            "messages": messages,
+            "stream": True,
+            "options": {
+                "temperature": temp,
+                "num_predict": tokens,
+            },
+        }
 
-
-# ─── Cohere Provider ───────────────────────────────────────
-
-
-class CohereProvider(LLMProvider):
-    """Cohere via cohere SDK (AsyncClientV2)."""
-
-    def __init__(self, api_key: str, model: str, temperature: float, max_tokens: int):
-        super().__init__("cohere", model, temperature, max_tokens)
-        from cohere import AsyncClientV2
-
-        self._client = AsyncClientV2(api_key=api_key)
-
-    async def complete(self, messages, temperature=None, max_tokens=None, json_mode=False) -> str:
-        temp = temperature if temperature is not None else self.temperature
-        tokens = max_tokens or self.max_tokens
-
-        chat_messages = []
-        for msg in messages:
-            if msg["role"] == "system":
-                chat_messages.append({"role": "system", "content": msg["content"]})
-            elif msg["role"] == "assistant":
-                chat_messages.append({"role": "assistant", "content": msg["content"]})
-            else:
-                chat_messages.append({"role": "user", "content": msg["content"]})
-
-        response = await self._client.chat(
-            model=self.model,
-            messages=chat_messages,
-            temperature=temp,
-            max_tokens=tokens,
-        )
-        return response.message.content[0].text
-
-    async def stream(self, messages, temperature=None, max_tokens=None) -> AsyncIterator[str]:
-        temp = temperature if temperature is not None else self.temperature
-        tokens = max_tokens or self.max_tokens
-
-        chat_messages = []
-        for msg in messages:
-            chat_messages.append({"role": msg["role"], "content": msg["content"]})
-
-        stream = self._client.chat_stream(
-            model=self.model,
-            messages=chat_messages,
-            temperature=temp,
-            max_tokens=tokens,
-        )
-        async for event in stream:
-            if event.type == "content-delta":
-                yield event.delta.message.content.text
+        async with self._client.stream("POST", "/api/chat", json=payload) as response:
+            response.raise_for_status()
+            async for line in response.aiter_lines():
+                if not line.strip():
+                    continue
+                try:
+                    chunk = json.loads(line)
+                    content = chunk.get("message", {}).get("content", "")
+                    if content:
+                        yield content
+                except json.JSONDecodeError:
+                    continue
 
 
 # ─── Provider Factory ──────────────────────────────────────
 
 
 def create_provider(
-    name: str,
-    api_key: str,
     model: str,
     temperature: float = 0.3,
     max_tokens: int = 4096,
+    base_url: str = "http://localhost:11434",
 ) -> LLMProvider:
-    """Create a provider instance by name."""
-    if name == "google":
-        return GeminiProvider(api_key, model, temperature, max_tokens)
-    elif name == "openai":
-        return OpenAICompatibleProvider(name, api_key, model, temperature, max_tokens)
-    elif name == "groq":
-        return OpenAICompatibleProvider(
-            name, api_key, model, temperature, max_tokens,
-            base_url="https://api.groq.com/openai/v1",
-        )
-    elif name == "openrouter":
-        return OpenAICompatibleProvider(
-            name, api_key, model, temperature, max_tokens,
-            base_url="https://openrouter.ai/api/v1",
-            default_headers={"HTTP-Referer": "https://faqih.ai", "X-Title": "Faqih.ai"},
-        )
-    elif name == "cohere":
-        return CohereProvider(api_key, model, temperature, max_tokens)
-    else:
-        raise ValueError(f"Unknown LLM provider: {name}")
+    """Create an Ollama provider instance for the given model."""
+    return OllamaProvider(
+        model=model,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        base_url=base_url,
+    )
 
 
 # ─── LLM Client with Failover ─────────────────────────────

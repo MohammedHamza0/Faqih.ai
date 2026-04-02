@@ -46,50 +46,26 @@ async def lifespan(app: FastAPI):
     embedding = EmbeddingService(settings.embedding_model)
     embedding.load()
 
-    # ── LLM Client with failover chain ──────────────────
-    # Map provider names to their API keys and default models
-    provider_config = {
-        "google": (settings.google_api_key, settings.google_model),
-        "openai": (settings.openai_api_key, settings.openai_model),
-        "groq": (settings.groq_api_key, settings.groq_model),
-        "openrouter": (settings.openrouter_api_key, settings.openrouter_model),
-        "cohere": (settings.cohere_api_key, settings.cohere_model),
-    }
-
-    # Build primary provider
-    primary_key, primary_model = provider_config.get(
-        settings.llm_provider, ("", settings.llm_model)
-    )
+    # ── LLM Client with Ollama ───────────────────────────────
     primary = create_provider(
-        name=settings.llm_provider,
-        api_key=primary_key,
-        model=settings.llm_model,  # Use the explicit LLM_MODEL for primary
+        model=settings.ollama_model,
         temperature=settings.llm_temperature,
         max_tokens=settings.llm_max_tokens,
+        base_url=settings.ollama_base_url,
     )
 
-    # Build fallback chain (only providers with API keys set)
     fallbacks = []
-    fallback_names = [
-        n.strip() for n in settings.llm_fallback_providers.split(",") if n.strip()
-    ]
-    for name in fallback_names:
-        if name == settings.llm_provider:
-            continue  # Skip primary
-        api_key, model = provider_config.get(name, ("", ""))
-        if api_key:  # Only add providers with configured keys
-            fallbacks.append(
-                create_provider(
-                    name=name,
-                    api_key=api_key,
-                    model=model,
-                    temperature=settings.llm_temperature,
-                    max_tokens=settings.llm_max_tokens,
-                )
+    for model_name in [m.strip() for m in settings.ollama_fallback_models.split(",") if m.strip()]:
+        fallbacks.append(
+            create_provider(
+                model=model_name,
+                temperature=settings.llm_temperature,
+                max_tokens=settings.llm_max_tokens,
+                base_url=settings.ollama_base_url,
             )
+        )
 
     llm = LLMClient(primary=primary, fallbacks=fallbacks)
-
     # Store in app state
     app.state.neo4j = neo4j
     app.state.qdrant = qdrant

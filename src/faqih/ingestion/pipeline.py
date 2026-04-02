@@ -81,33 +81,24 @@ class IngestionPipeline:
         self._embedding = EmbeddingService(s.embedding_model)
         self._embedding.load()
 
-        # Initialize LLM client
-        provider_config = {
-            "google": (s.google_api_key, s.google_model),
-            "openai": (s.openai_api_key, s.openai_model),
-            "groq": (s.groq_api_key, s.groq_model),
-            "openrouter": (s.openrouter_api_key, s.openrouter_model),
-            "cohere": (s.cohere_api_key, s.cohere_model),
-        }
-        primary_key, _ = provider_config.get(s.llm_provider, ("", ""))
+        # Initialize LLM client (Ollama)
         primary = create_provider(
-            name=s.llm_provider,
-            api_key=primary_key,
-            model=s.llm_model,
+            model=s.ollama_model,
             temperature=s.llm_temperature,
             max_tokens=s.llm_max_tokens,
+            base_url=s.ollama_base_url,
         )
 
         fallbacks = []
-        for name in [n.strip() for n in s.llm_fallback_providers.split(",") if n.strip()]:
-            if name == s.llm_provider:
-                continue
-            api_key, model = provider_config.get(name, ("", ""))
-            if api_key:
-                fallbacks.append(
-                    create_provider(name=name, api_key=api_key, model=model,
-                                    temperature=s.llm_temperature, max_tokens=s.llm_max_tokens)
+        for model_name in [m.strip() for m in s.ollama_fallback_models.split(",") if m.strip()]:
+            fallbacks.append(
+                create_provider(
+                    model=model_name,
+                    temperature=s.llm_temperature,
+                    max_tokens=s.llm_max_tokens,
+                    base_url=s.ollama_base_url,
                 )
+            )
 
         self._llm = LLMClient(primary=primary, fallbacks=fallbacks)
 
