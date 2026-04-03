@@ -244,17 +244,39 @@ class LLMClient:
         temperature: float | None = None,
     ) -> dict:
         """Get a JSON response from the LLM with failover."""
-        response = await self.complete(messages, temperature=temperature, json_mode=True)
-        try:
-            text = response.strip()
-            if text.startswith("```"):
-                lines = text.split("\n")
-                lines = [l for l in lines if not l.strip().startswith("```")]
-                text = "\n".join(lines)
-            return json.loads(text)
-        except json.JSONDecodeError:
-            logger.error("Failed to parse JSON response: %s", response[:200])
-            return {}
+        errors: list[tuple[str, Exception]] = []
+        query_text = next((m["content"] for m in messages if m["role"] == "user"), "")
+
+        for provider in self._providers:
+            try:
+                response = await provider.complete(
+                    messages,
+                    temperature=temperature,
+                    json_mode=True,
+                )
+                text = response.strip()
+                if text.startswith("```"):
+                    lines = text.split("\n")
+                    lines = [l for l in lines if not l.strip().startswith("```")]
+                    text = "\n".join(lines)
+                
+                # Check for empty response to avoid obscure json errors
+                if not text:
+                    raise ValueError("Received empty response from provider")
+                    
+                parsed_json = json.loads(text)
+                return parsed_json
+            except Exception as e:
+                errors.append((provider.name, e))
+                logger.warning(
+                    "Provider '%s' failed in JSON complete: [%s] %s. Trying next...",
+                    provider.name, type(e).__name__, str(e)[:200],
+                )
+
+        # All providers exhausted
+        _log_exhaustion_to_file(query_text, errors)
+        logger.error("All %d LLM providers exhausted for complete_json.", len(errors))
+        return {}
 
     async def stream(
         self,
