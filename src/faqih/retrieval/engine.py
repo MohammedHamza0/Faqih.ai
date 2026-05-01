@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from faqih.models.schemas import FusedResult, QueryIntent, RetrievalResult
+from faqih.models.schemas import FusedResult, QueryIntent
 from faqih.retrieval.fusion import Reranker, reciprocal_rank_fusion
 from faqih.retrieval.graph_search import GraphSearcher
 from faqih.retrieval.keyword_search import KeywordSearcher
@@ -92,7 +92,9 @@ class RetrievalEngine:
 
         logger.info(
             "Retrieval: vector=%d, graph=%d, bm25=%d",
-            len(vector_results), len(graph_results), len(keyword_results),
+            len(vector_results),
+            len(graph_results),
+            len(keyword_results),
         )
 
         # ── Also search with expanded queries if available ──

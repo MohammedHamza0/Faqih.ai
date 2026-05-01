@@ -175,9 +175,11 @@ class ElasticsearchService:
         result = await self.client.search(index=index_name, body=body)
         hits = []
         for hit in result["hits"]["hits"]:
-            hits.append({
-                "chunk_id": hit["_id"],
-                "score": hit["_score"],
-                "source": hit["_source"],
-            })
+            hits.append(
+                {
+                    "chunk_id": hit["_id"],
+                    "score": hit["_score"],
+                    "source": hit["_source"],
+                }
+            )
         return hits

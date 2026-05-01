@@ -3,7 +3,6 @@
 import asyncio
 import logging
 import sys
-from pathlib import Path
 
 import click
 from rich.console import Console
@@ -19,13 +18,16 @@ console = Console()
 @click.option("--title", "-t", required=True, help="Book title (Arabic preferred)")
 @click.option("--author", "-a", required=True, help="Book author")
 @click.option(
-    "--madhab", "-m",
+    "--madhab",
+    "-m",
     type=click.Choice(["hanafi", "maliki", "shafii", "hanbali"]),
     help="Book's madhab (optional)",
 )
 @click.option("--recreate", is_flag=True, help="Recreate all indexes from scratch")
 @click.option("--verbose", "-v", is_flag=True, help="Verbose logging")
-def main(file_path: str, title: str, author: str, madhab: str | None, recreate: bool, verbose: bool):
+def main(
+    file_path: str, title: str, author: str, madhab: str | None, recreate: bool, verbose: bool
+):
     """
     Ingest a Fiqh book (PDF/DOCX) into the Al-Ijtihad system.
 

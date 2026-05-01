@@ -43,10 +43,7 @@ class TestRRFFusion:
 
     def test_rrf_scores_decrease(self):
         """RRF scores should be monotonically decreasing."""
-        results = [
-            RetrievalResult(chunk_id=f"c{i}", score=1.0, source="vector")
-            for i in range(10)
-        ]
+        results = [RetrievalResult(chunk_id=f"c{i}", score=1.0, source="vector") for i in range(10)]
         fused = reciprocal_rank_fusion([results])
         for i in range(len(fused) - 1):
             assert fused[i].rrf_score >= fused[i + 1].rrf_score

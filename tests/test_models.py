@@ -1,7 +1,7 @@
 """Tests for Pydantic models and enums."""
 
 from faqih.models.enums import ChunkType, Madhab, QuestionType, RelationType
-from faqih.models.schemas import Chunk, Entity, QueryIntent, RetrievalResult, Session
+from faqih.models.schemas import Chunk, QueryIntent, Session
 
 
 class TestEnums:

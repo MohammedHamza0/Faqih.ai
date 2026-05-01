@@ -8,8 +8,6 @@ from datetime import datetime
 from sqlalchemy import (
     JSON,
     DateTime,
-    Enum,
-    Float,
     ForeignKey,
     Integer,
     String,
@@ -19,7 +17,7 @@ from sqlalchemy import (
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-from faqih.models.enums import ChunkType, Madhab
+from faqih.models.enums import ChunkType
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -63,18 +61,14 @@ class ChunkRecord(Base):
     chunk_id: Mapped[str] = mapped_column(
         String(36), primary_key=True, default=lambda: str(uuid.uuid4())
     )
-    book_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("books.book_id"), nullable=False
-    )
+    book_id: Mapped[str] = mapped_column(String(36), ForeignKey("books.book_id"), nullable=False)
     chapter_path: Mapped[dict] = mapped_column(JSON, default=list)
     chunk_type: Mapped[str] = mapped_column(String(20), default=ChunkType.GENERAL)
     page_start: Mapped[int | None] = mapped_column(Integer, nullable=True)
     page_end: Mapped[int | None] = mapped_column(Integer, nullable=True)
     token_count: Mapped[int] = mapped_column(Integer, default=0)
     graph_node_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     book: Mapped[BookRecord] = relationship(back_populates="chunks")
 
@@ -90,9 +84,7 @@ class SessionRecord(Base):
     session_id: Mapped[str] = mapped_column(
         String(36), primary_key=True, default=lambda: str(uuid.uuid4())
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
@@ -114,9 +106,7 @@ class TurnRecord(Base):
     )
     role: Mapped[str] = mapped_column(String(20), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    timestamp: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     entities_mentioned: Mapped[dict] = mapped_column(JSON, default=list)
     chunk_ids_cited: Mapped[dict] = mapped_column(JSON, default=list)
 

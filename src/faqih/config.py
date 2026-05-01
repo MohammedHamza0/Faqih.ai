@@ -52,7 +52,6 @@ class Settings(BaseSettings):
     embedding_model: str = "aubmindlab/bert-base-arabertv2"
     embedding_dim: int = 768
 
-
     # ── Retrieval Settings ──────────────────────────────────
     retrieval_top_k: int = 20
     reranker_top_k: int = 8

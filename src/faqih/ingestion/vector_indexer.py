@@ -55,9 +55,7 @@ class VectorIndexer:
 
         # Batch embed all chunk texts
         texts = [chunk.text for chunk in chunks]
-        all_embeddings = self._embedding.encode(
-            texts, batch_size=batch_size, show_progress=True
-        )
+        all_embeddings = self._embedding.encode(texts, batch_size=batch_size, show_progress=True)
 
         # Build Qdrant points
         points = []

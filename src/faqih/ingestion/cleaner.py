@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 # Diacritics (tashkeel) pattern
 _DIACRITICS_PATTERN = re.compile(
-    "[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7\u06E8\u06EA-\u06ED]"
+    "[\u0610-\u061a\u064b-\u065f\u0670\u06d6-\u06dc\u06df-\u06e4\u06e7\u06e8\u06ea-\u06ed]"
 )
 
 # Common page header/footer patterns in Fiqh books
@@ -29,7 +29,7 @@ _HAMZA_MAP = {
     "\u0625": "\u0627",  # إ → ا
     "\u0622": "\u0627",  # آ → ا
     "\u0624": "\u0648",  # ؤ → و
-    "\u0626": "\u064A",  # ئ → ي
+    "\u0626": "\u064a",  # ئ → ي
 }
 
 # Alef variations normalization

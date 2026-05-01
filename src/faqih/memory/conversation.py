@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from faqih.models.schemas import ConversationTurn, Session
 from faqih.services.redis_client import RedisService
@@ -46,9 +46,7 @@ class ConversationMemory:
 
     async def get_session(self, session_id: str) -> Session | None:
         """Retrieve a session by ID."""
-        data = await self._redis.get_json(
-            self.SESSION_KEY.format(session_id=session_id)
-        )
+        data = await self._redis.get_json(self.SESSION_KEY.format(session_id=session_id))
         if data:
             return Session(**data)
         return None
@@ -82,7 +80,7 @@ class ConversationMemory:
         if entities:
             entities_key = self.ENTITIES_KEY.format(session_id=session_id)
             for entity in entities:
-                await self._redis.hset(entities_key, entity, datetime.now(timezone.utc).isoformat())
+                await self._redis.hset(entities_key, entity, datetime.now(UTC).isoformat())
             await self._redis.expire(entities_key, self._ttl)
 
     async def get_recent_turns(self, session_id: str) -> list[ConversationTurn]:
@@ -106,9 +104,7 @@ class ConversationMemory:
         entity_map = await self._redis.hgetall(entities_key)
         return list(entity_map.keys())
 
-    async def resolve_reference(
-        self, session_id: str, reference: str
-    ) -> str | None:
+    async def resolve_reference(self, session_id: str, reference: str) -> str | None:
         """
         Resolve an anaphoric reference like "هذا الحكم" or "الرأي الثاني".
 
@@ -117,9 +113,7 @@ class ConversationMemory:
         refs_key = self.REFS_KEY.format(session_id=session_id)
         return await self._redis.hget(refs_key, reference)
 
-    async def store_reference(
-        self, session_id: str, reference: str, resolved_to: str
-    ):
+    async def store_reference(self, session_id: str, reference: str, resolved_to: str):
         """Store a resolved reference mapping."""
         refs_key = self.REFS_KEY.format(session_id=session_id)
         await self._redis.hset(refs_key, reference, resolved_to)

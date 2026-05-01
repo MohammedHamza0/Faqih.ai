@@ -8,13 +8,13 @@ from enum import StrEnum
 class ChunkType(StrEnum):
     """Classification of a Fiqh text chunk by its content role."""
 
-    HUKM = "hukm"              # Ruling / Legal judgment
-    DALIL = "dalil"            # Evidence / Proof
-    TALIL = "talil"            # Reasoning / Justification
-    KHILAF = "khilaf"          # Scholarly disagreement
-    SHART = "shart"            # Condition / Prerequisite
-    ISTITHNA = "istithna"      # Exception
-    GENERAL = "general"        # Unclassified content
+    HUKM = "hukm"  # Ruling / Legal judgment
+    DALIL = "dalil"  # Evidence / Proof
+    TALIL = "talil"  # Reasoning / Justification
+    KHILAF = "khilaf"  # Scholarly disagreement
+    SHART = "shart"  # Condition / Prerequisite
+    ISTITHNA = "istithna"  # Exception
+    GENERAL = "general"  # Unclassified content
 
 
 class Madhab(StrEnum):
@@ -42,10 +42,10 @@ class RelationType(StrEnum):
 class QuestionType(StrEnum):
     """Classification of user question intent."""
 
-    FATWA = "fatwa"            # Seeking a ruling
-    MUQARANA = "muqarana"      # Comparative across madhabs
-    TASIL = "tasil"            # Foundational / Theoretical
-    TARIKH = "tarikh"          # Historical
+    FATWA = "fatwa"  # Seeking a ruling
+    MUQARANA = "muqarana"  # Comparative across madhabs
+    TASIL = "tasil"  # Foundational / Theoretical
+    TARIKH = "tarikh"  # Historical
 
 
 class DetailLevel(StrEnum):
@@ -59,11 +59,11 @@ class DetailLevel(StrEnum):
 class EntityType(StrEnum):
     """Types of entities extracted from Fiqh texts."""
 
-    MASALA = "masala"          # Legal issue / question
-    SCHOLAR = "scholar"        # Named scholar
-    BOOK = "book"             # Reference book
-    AYAH = "ayah"             # Quranic verse
-    HADITH = "hadith"         # Prophetic tradition
-    IJMA = "ijma"             # Consensus
-    QIYAS = "qiyas"           # Analogical reasoning
-    TERM = "term"             # Technical Fiqh term
+    MASALA = "masala"  # Legal issue / question
+    SCHOLAR = "scholar"  # Named scholar
+    BOOK = "book"  # Reference book
+    AYAH = "ayah"  # Quranic verse
+    HADITH = "hadith"  # Prophetic tradition
+    IJMA = "ijma"  # Consensus
+    QIYAS = "qiyas"  # Analogical reasoning
+    TERM = "term"  # Technical Fiqh term

@@ -15,11 +15,11 @@ logger = logging.getLogger(__name__)
 
 # Ordered by hierarchy depth (most general → most specific)
 STRUCTURAL_MARKERS = [
-    ("كتاب", 0),     # Book / Major division
-    ("باب", 1),       # Chapter
-    ("فصل", 2),       # Section
-    ("مسألة", 3),     # Legal issue
-    ("فرع", 4),       # Sub-issue / Branch
+    ("كتاب", 0),  # Book / Major division
+    ("باب", 1),  # Chapter
+    ("فصل", 2),  # Section
+    ("مسألة", 3),  # Legal issue
+    ("فرع", 4),  # Sub-issue / Branch
 ]
 
 # Compiled patterns for structural detection
@@ -86,8 +86,6 @@ class FiqhChunker:
 
         Returns list of Chunk objects with full metadata.
         """
-        # Track current page
-        current_page = 1
         page_map = self._build_page_map(text)
 
         # Remove page markers from text for processing
@@ -96,22 +94,33 @@ class FiqhChunker:
 
         # Try structural chunking first
         structural_chunks = self._structural_chunk(
-            clean_text, clean_display, page_map,
-            book_id, book_title, author, madhab,
+            clean_text,
+            clean_display,
+            page_map,
+            book_id,
+            book_title,
+            author,
+            madhab,
         )
 
         if structural_chunks:
             logger.info(
                 "Structural chunking produced %d chunks for '%s'",
-                len(structural_chunks), book_title,
+                len(structural_chunks),
+                book_title,
             )
             return structural_chunks
 
         # Fallback to sliding window
         logger.info("No structural markers found, using sliding window for '%s'", book_title)
         return self._sliding_window_chunk(
-            clean_text, clean_display, page_map,
-            book_id, book_title, author, madhab,
+            clean_text,
+            clean_display,
+            page_map,
+            book_id,
+            book_title,
+            author,
+            madhab,
         )
 
     def _build_page_map(self, text: str) -> dict[int, int]:
@@ -169,8 +178,12 @@ class FiqhChunker:
                             "\n".join(current_content),
                             "\n".join(current_display),
                             [f"{m}: {t}" for m, t in current_path],
-                            page_map, char_offset,
-                            book_id, book_title, author, madhab,
+                            page_map,
+                            char_offset,
+                            book_id,
+                            book_title,
+                            author,
+                            madhab,
                         )
                         if chunk:
                             chunks.append(chunk)
@@ -179,8 +192,10 @@ class FiqhChunker:
                     title = match.group(2).strip()
                     # Trim path to current level
                     current_path = [
-                        (m, t) for m, t in current_path
-                        if STRUCTURAL_MARKERS[[x[0] for x in STRUCTURAL_MARKERS].index(m)][1] < level
+                        (m, t)
+                        for m, t in current_path
+                        if STRUCTURAL_MARKERS[[x[0] for x in STRUCTURAL_MARKERS].index(m)][1]
+                        < level
                     ]
                     current_path.append((marker, title))
                     current_level = level
@@ -201,8 +216,12 @@ class FiqhChunker:
                 "\n".join(current_content),
                 "\n".join(current_display),
                 [f"{m}: {t}" for m, t in current_path],
-                page_map, char_offset,
-                book_id, book_title, author, madhab,
+                page_map,
+                char_offset,
+                book_id,
+                book_title,
+                author,
+                madhab,
             )
             if chunk:
                 chunks.append(chunk)
@@ -244,9 +263,15 @@ class FiqhChunker:
                 chunk_display = " ".join(current_display)
 
                 chunk = self._create_chunk(
-                    chunk_text, chunk_display, [],
-                    page_map, char_offset - len(chunk_text),
-                    book_id, book_title, author, madhab,
+                    chunk_text,
+                    chunk_display,
+                    [],
+                    page_map,
+                    char_offset - len(chunk_text),
+                    book_id,
+                    book_title,
+                    author,
+                    madhab,
                 )
                 if chunk:
                     chunks.append(chunk)
@@ -274,9 +299,15 @@ class FiqhChunker:
             chunk_text = " ".join(current_tokens)
             chunk_display = " ".join(current_display)
             chunk = self._create_chunk(
-                chunk_text, chunk_display, [],
-                page_map, char_offset - len(chunk_text),
-                book_id, book_title, author, madhab,
+                chunk_text,
+                chunk_display,
+                [],
+                page_map,
+                char_offset - len(chunk_text),
+                book_id,
+                book_title,
+                author,
+                madhab,
             )
             if chunk:
                 chunks.append(chunk)

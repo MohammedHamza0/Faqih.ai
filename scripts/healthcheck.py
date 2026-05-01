@@ -5,8 +5,8 @@ from __future__ import annotations
 import sys
 
 import httpx
-from redis import Redis
 from neo4j import GraphDatabase
+from redis import Redis
 from rich.console import Console
 from rich.table import Table
 
@@ -76,9 +76,10 @@ def check_postgres(settings) -> tuple[bool, str]:
     except ImportError:
         # Fallback: try via httpx to pg bouncer or just report
         try:
-            import asyncpg
             import asyncio
             from urllib.parse import urlparse
+
+            import asyncpg
 
             parsed = urlparse(settings.database_url.replace("postgresql+asyncpg", "postgresql"))
 

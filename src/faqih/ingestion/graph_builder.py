@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
 
 from faqih.ingestion.cleaner import ArabicTextCleaner
 from faqih.models.enums import EntityType, RelationType
@@ -71,7 +70,9 @@ class GraphBuilder:
         entities, relationships = await self._extract_from_llm(chunk)
         logger.info(
             "Extracted %d entities, %d relationships from chunk %s",
-            len(entities), len(relationships), chunk.chunk_id[:8],
+            len(entities),
+            len(relationships),
+            chunk.chunk_id[:8],
         )
 
         # Step 2: Write chunk node to Neo4j
@@ -109,9 +110,7 @@ class GraphBuilder:
 
         return entities, relationships
 
-    async def _extract_from_llm(
-        self, chunk: Chunk
-    ) -> tuple[list[Entity], list[Relationship]]:
+    async def _extract_from_llm(self, chunk: Chunk) -> tuple[list[Entity], list[Relationship]]:
         """Use LLM to extract entities and relationships from chunk text."""
         chapter_str = " > ".join(chunk.chapter_path) if chunk.chapter_path else "غير محدد"
 
@@ -212,9 +211,7 @@ class GraphBuilder:
 
         for i in range(0, len(chunks), batch_size):
             batch = chunks[i : i + batch_size]
-            results = await asyncio.gather(
-                *(self.process_chunk(chunk) for chunk in batch)
-            )
+            results = await asyncio.gather(*(self.process_chunk(chunk) for chunk in batch))
             for entities, rels in results:
                 all_entities.extend(entities)
                 all_relationships.extend(rels)

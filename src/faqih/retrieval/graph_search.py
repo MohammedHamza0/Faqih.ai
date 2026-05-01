@@ -56,9 +56,7 @@ class GraphSearcher:
         RETURN DISTINCT elementId(e) AS entity_id, e.text AS text
         LIMIT 20
         """
-        entity_nodes = await self._neo4j.run_query(
-            entity_match_query, {"entities": query_entities}
-        )
+        entity_nodes = await self._neo4j.run_query(entity_match_query, {"entities": query_entities})
 
         if not entity_nodes:
             logger.info("No matching entities found in graph")
@@ -107,9 +105,7 @@ class GraphSearcher:
         logger.info("Graph search returned %d results", len(retrieval_results))
         return retrieval_results
 
-    async def find_entity_chunks(
-        self, entity_text: str
-    ) -> list[str]:
+    async def find_entity_chunks(self, entity_text: str) -> list[str]:
         """Find chunk IDs directly connected to a specific entity."""
         query = """
         MATCH (e:Entity)-[:HAS_CONTENT]-(c:Chunk)

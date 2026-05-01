@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
-from typing import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
@@ -19,7 +19,9 @@ class EmbeddingService:
     Supports batch encoding with caching.
     """
 
-    def __init__(self, model_name: str = "aubmindlab/bert-base-arabertv2", device: str | None = None):
+    def __init__(
+        self, model_name: str = "aubmindlab/bert-base-arabertv2", device: str | None = None
+    ):
         self._model_name = model_name
         self._device = device
         self._model: SentenceTransformer | None = None

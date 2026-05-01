@@ -35,7 +35,9 @@ FIQH_SYSTEM_PROMPT = """أنت عالم فقه إسلامي متخصص اسمه 
 
 # ─── Prompt for Comparative (Muqarana) Questions ────────────
 
-MUQARANA_SYSTEM_PROMPT = FIQH_SYSTEM_PROMPT + """
+MUQARANA_SYSTEM_PROMPT = (
+    FIQH_SYSTEM_PROMPT
+    + """
 
 ### تعليمات إضافية للمقارنة:
 - قارن بين المذاهب بشكل منظم في جدول أو قائمة
@@ -43,16 +45,20 @@ MUQARANA_SYSTEM_PROMPT = FIQH_SYSTEM_PROMPT + """
 - اذكر الراجح عند كل مذهب مع الدليل
 - لا تنحاز لمذهب على آخر
 """
+)
 
 # ─── Prompt for Brief Answers ──────────────────────────────
 
-BRIEF_SYSTEM_PROMPT = FIQH_SYSTEM_PROMPT + """
+BRIEF_SYSTEM_PROMPT = (
+    FIQH_SYSTEM_PROMPT
+    + """
 
 ### تعليمات إضافية للاختصار:
 - أجب بإيجاز شديد
 - اذكر الحكم الراجح فقط مع دليل واحد
 - لا تتوسع في الخلاف إلا إذا طُلب
 """
+)
 
 # ─── Context Formatting Template ───────────────────────────
 

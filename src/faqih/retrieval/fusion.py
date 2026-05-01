@@ -47,7 +47,8 @@ def reciprocal_rank_fusion(
 
     logger.info(
         "RRF fusion: %d unique chunks from %d sources",
-        len(fused), len(result_lists),
+        len(fused),
+        len(result_lists),
     )
     return fused
 

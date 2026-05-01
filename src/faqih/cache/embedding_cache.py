@@ -81,6 +81,7 @@ class EmbeddingCache:
 
         logger.info(
             "Embedding batch: %d cached, %d computed",
-            len(texts) - len(to_compute), len(to_compute),
+            len(texts) - len(to_compute),
+            len(to_compute),
         )
         return results  # type: ignore

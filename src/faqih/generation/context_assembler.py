@@ -10,13 +10,13 @@ logger = logging.getLogger(__name__)
 
 # Priority order for chunk types in the assembled context
 CHUNK_TYPE_ORDER = {
-    ChunkType.HUKM: 0,       # Ruling first
-    ChunkType.DALIL: 1,      # Evidence second
-    ChunkType.KHILAF: 2,     # Disagreement third
-    ChunkType.TALIL: 3,      # Reasoning fourth
-    ChunkType.SHART: 4,      # Conditions fifth
-    ChunkType.ISTITHNA: 5,   # Exceptions sixth
-    ChunkType.GENERAL: 6,    # General last
+    ChunkType.HUKM: 0,  # Ruling first
+    ChunkType.DALIL: 1,  # Evidence second
+    ChunkType.KHILAF: 2,  # Disagreement third
+    ChunkType.TALIL: 3,  # Reasoning fourth
+    ChunkType.SHART: 4,  # Conditions fifth
+    ChunkType.ISTITHNA: 5,  # Exceptions sixth
+    ChunkType.GENERAL: 6,  # General last
 }
 
 
@@ -83,6 +83,8 @@ class ContextAssembler:
         result = unique_chunks[: self._max_chunks]
         logger.info(
             "Assembled %d chunks from %d retrieved (comparative=%s)",
-            len(result), len(chunks_data), is_comparative,
+            len(result),
+            len(chunks_data),
+            is_comparative,
         )
         return result

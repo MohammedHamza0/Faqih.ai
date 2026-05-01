@@ -131,15 +131,20 @@ async def query_endpoint(
             mentioned_entities = [c.get("book_title", "") for c in chunks_data[:3]]
             await memory.add_turn(session_id, "user", query_text, entities=mentioned_entities)
             await memory.add_turn(
-                session_id, "assistant", answer_text,
+                session_id,
+                "assistant",
+                answer_text,
                 chunk_ids=[r.chunk_id for r in fused_results],
             )
 
             # Step 8: Cache the response
-            await cache.set(query_text, {
-                "answer": answer_text,
-                "citations": citations_data,
-            })
+            await cache.set(
+                query_text,
+                {
+                    "answer": answer_text,
+                    "citations": citations_data,
+                },
+            )
 
             yield "data: [DONE]\n\n"
 

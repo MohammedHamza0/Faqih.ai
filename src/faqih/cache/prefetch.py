@@ -41,8 +41,9 @@ def prefetch_related_masail(entity_ids: list[str], depth: int = 2):
     for likely follow-up questions.
     """
     import asyncio
-    from faqih.services.neo4j_client import Neo4jClient
+
     from faqih.cache.graph_cache import GraphCache
+    from faqih.services.neo4j_client import Neo4jClient
     from faqih.services.redis_client import RedisService
 
     async def _prefetch():
@@ -58,16 +59,17 @@ def prefetch_related_masail(entity_ids: list[str], depth: int = 2):
 
         try:
             # Clamp depth to safe range (Cypher doesn't support parameterized depth)
-            depth = max(1, min(depth, 5))
+            safe_depth = max(1, min(depth, 5))
 
             # Check if already cached
-            cached = await cache.get(entity_ids, depth)
+            cached = await cache.get(entity_ids, safe_depth)
             if cached:
                 logger.info("Prefetch: already cached for %d entities", len(entity_ids))
                 return
 
             # Fetch from Neo4j
-            query = """
+            query = (
+                """
             UNWIND $entity_ids AS eid
             MATCH (e:Entity {canonical_id: eid})
             MATCH path = (e)-[*1..%d]-(related:Entity)
@@ -78,12 +80,14 @@ def prefetch_related_masail(entity_ids: list[str], depth: int = 2):
                    distance
             ORDER BY distance
             LIMIT 50
-            """ % depth
+            """
+                % safe_depth
+            )
 
             results = await neo4j.run_query(query, {"entity_ids": entity_ids})
 
             # Cache results
-            await cache.set(entity_ids, depth, results)
+            await cache.set(entity_ids, safe_depth, results)
             logger.info("Prefetched %d results for %d entities", len(results), len(entity_ids))
 
         finally:

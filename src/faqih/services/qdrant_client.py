@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from qdrant_client import AsyncQdrantClient, models
 
@@ -107,9 +106,7 @@ class QdrantService:
         )
         return results.points
 
-    async def get_point(
-        self, collection_name: str, point_id: str
-    ) -> models.Record | None:
+    async def get_point(self, collection_name: str, point_id: str) -> models.Record | None:
         """Retrieve a single point by ID."""
         results = await self.client.retrieve(
             collection_name=collection_name,

@@ -7,13 +7,13 @@ Supports automatic failover between local models.
 
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone
+from collections.abc import AsyncIterator
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, AsyncIterator
+from typing import Any
 
 import httpx
 
@@ -39,15 +39,15 @@ def _log_exhaustion_to_file(query: str, errors: list[tuple[str, Exception]]):
     """Log all-providers-exhausted failures to a persistent log file."""
     try:
         LOG_DIR.mkdir(parents=True, exist_ok=True)
-        timestamp = datetime.now(timezone.utc).isoformat()
+        timestamp = datetime.now(UTC).isoformat()
         with open(LLM_ERROR_LOG, "a", encoding="utf-8") as f:
-            f.write(f"\n{'='*80}\n")
+            f.write(f"\n{'=' * 80}\n")
             f.write(f"TIMESTAMP: {timestamp}\n")
             f.write(f"QUERY: {query[:500]}\n")
             f.write(f"PROVIDERS TRIED: {len(errors)}\n")
             for name, error in errors:
                 f.write(f"  - {name}: [{type(error).__name__}] {str(error)[:300]}\n")
-            f.write(f"{'='*80}\n")
+            f.write(f"{'=' * 80}\n")
     except Exception as log_err:
         logger.warning("Failed to write to LLM error log file: %s", log_err)
 
@@ -104,9 +104,7 @@ class OllamaProvider(LLMProvider):
         self._base_url = base_url.rstrip("/")
         self._client = httpx.AsyncClient(base_url=self._base_url, timeout=None)
 
-    async def complete(
-        self, messages, temperature=None, max_tokens=None, json_mode=False
-    ) -> str:
+    async def complete(self, messages, temperature=None, max_tokens=None, json_mode=False) -> str:
         temp = temperature if temperature is not None else self.temperature
         tokens = max_tokens or self.max_tokens
 
@@ -127,9 +125,7 @@ class OllamaProvider(LLMProvider):
         data = response.json()
         return data.get("message", {}).get("content", "")
 
-    async def stream(
-        self, messages, temperature=None, max_tokens=None
-    ) -> AsyncIterator[str]:
+    async def stream(self, messages, temperature=None, max_tokens=None) -> AsyncIterator[str]:
         temp = temperature if temperature is not None else self.temperature
         tokens = max_tokens or self.max_tokens
 
@@ -230,7 +226,9 @@ class LLMClient:
                 errors.append((provider.name, e))
                 logger.warning(
                     "Provider '%s' failed: [%s] %s. Trying next...",
-                    provider.name, type(e).__name__, str(e)[:200],
+                    provider.name,
+                    type(e).__name__,
+                    str(e)[:200],
                 )
 
         # All providers exhausted — log to file and raise
@@ -257,20 +255,22 @@ class LLMClient:
                 text = response.strip()
                 if text.startswith("```"):
                     lines = text.split("\n")
-                    lines = [l for l in lines if not l.strip().startswith("```")]
+                    lines = [line for line in lines if not line.strip().startswith("```")]
                     text = "\n".join(lines)
-                
+
                 # Check for empty response to avoid obscure json errors
                 if not text:
                     raise ValueError("Received empty response from provider")
-                    
+
                 parsed_json = json.loads(text)
                 return parsed_json
             except Exception as e:
                 errors.append((provider.name, e))
                 logger.warning(
                     "Provider '%s' failed in JSON complete: [%s] %s. Trying next...",
-                    provider.name, type(e).__name__, str(e)[:200],
+                    provider.name,
+                    type(e).__name__,
+                    str(e)[:200],
                 )
 
         # All providers exhausted
@@ -301,7 +301,9 @@ class LLMClient:
                 errors.append((provider.name, e))
                 logger.warning(
                     "Provider '%s' stream failed: [%s] %s. Trying next...",
-                    provider.name, type(e).__name__, str(e)[:200],
+                    provider.name,
+                    type(e).__name__,
+                    str(e)[:200],
                 )
 
         _log_exhaustion_to_file(query_text, errors)

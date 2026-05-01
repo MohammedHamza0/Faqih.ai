@@ -18,7 +18,6 @@ from faqih.ingestion.extractor import BookExtractor
 from faqih.ingestion.graph_builder import GraphBuilder
 from faqih.ingestion.keyword_indexer import KeywordIndexer
 from faqih.ingestion.vector_indexer import VectorIndexer
-from faqih.models.enums import Madhab
 from faqih.models.schemas import BookMetadata
 from faqih.services.elasticsearch_client import ElasticsearchService
 from faqih.services.embedding import EmbeddingService
@@ -106,9 +105,7 @@ class IngestionPipeline:
         self._graph_builder = GraphBuilder(self._llm, self._neo4j)
         await self._graph_builder.setup()
 
-        self._vector_indexer = VectorIndexer(
-            self._qdrant, self._embedding, s.qdrant_collection
-        )
+        self._vector_indexer = VectorIndexer(self._qdrant, self._embedding, s.qdrant_collection)
         await self._vector_indexer.setup(recreate=recreate_indexes)
 
         self._keyword_indexer = KeywordIndexer(self._es, s.elasticsearch_index)
@@ -197,8 +194,7 @@ class IngestionPipeline:
 
         elapsed = time.time() - start_time
         console.print(
-            f"\n[bold green]Ingestion complete![/bold green] "
-            f"{len(chunks)} chunks in {elapsed:.1f}s"
+            f"\n[bold green]Ingestion complete![/bold green] {len(chunks)} chunks in {elapsed:.1f}s"
         )
 
         return metadata

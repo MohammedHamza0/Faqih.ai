@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 from pydantic import BaseModel, Field
 
@@ -17,7 +16,6 @@ from faqih.models.enums import (
     RelationType,
 )
 
-
 # ─── Ingestion Schemas ──────────────────────────────────────
 
 
@@ -28,7 +26,7 @@ class Chunk(BaseModel):
     book_id: str
     book_title: str
     author: str
-    madhab: Optional[Madhab] = None
+    madhab: Madhab | None = None
     chapter_path: list[str] = Field(
         default_factory=list,
         description="Hierarchical path: [كتاب, باب, فصل, مسألة]",
@@ -36,10 +34,10 @@ class Chunk(BaseModel):
     chunk_type: ChunkType = ChunkType.GENERAL
     text: str = Field(description="Cleaned text for embedding and search")
     display_text: str = Field(description="Original text with diacritics for display")
-    page_start: Optional[int] = None
-    page_end: Optional[int] = None
-    embedding: Optional[list[float]] = Field(default=None, exclude=True)
-    graph_node_id: Optional[str] = None
+    page_start: int | None = None
+    page_end: int | None = None
+    embedding: list[float] | None = Field(default=None, exclude=True)
+    graph_node_id: str | None = None
     token_count: int = 0
 
 
@@ -49,8 +47,8 @@ class Entity(BaseModel):
     entity_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     type: EntityType
     text: str
-    canonical_id: Optional[str] = None
-    source_chunk_id: Optional[str] = None
+    canonical_id: str | None = None
+    source_chunk_id: str | None = None
     metadata: dict = Field(default_factory=dict)
 
 
@@ -60,7 +58,7 @@ class Relationship(BaseModel):
     source_id: str
     target_id: str
     type: RelationType
-    madhab: Optional[Madhab] = None
+    madhab: Madhab | None = None
     weight: float = 1.0
     metadata: dict = Field(default_factory=dict)
 
@@ -71,11 +69,11 @@ class BookMetadata(BaseModel):
     book_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     title: str
     author: str
-    madhab: Optional[Madhab] = None
+    madhab: Madhab | None = None
     file_path: str
     total_pages: int = 0
     total_chunks: int = 0
-    ingested_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    ingested_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 # ─── Query & Conversation Schemas ───────────────────────────
@@ -84,7 +82,7 @@ class BookMetadata(BaseModel):
 class QueryIntent(BaseModel):
     """Detected intent from a user query."""
 
-    madhab_preference: Optional[Madhab | str] = Field(
+    madhab_preference: Madhab | str | None = Field(
         default="all",
         description="Specific madhab or 'all' for comparative",
     )
@@ -98,7 +96,7 @@ class ConversationTurn(BaseModel):
 
     role: str = Field(description="'user' or 'assistant'")
     content: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     entities_mentioned: list[str] = Field(default_factory=list)
     chunk_ids_cited: list[str] = Field(default_factory=list)
 
@@ -108,7 +106,7 @@ class Session(BaseModel):
 
     session_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     turns: list[ConversationTurn] = Field(default_factory=list)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     entity_history: list[str] = Field(
         default_factory=list,
         description="Entities mentioned across the session",
@@ -117,7 +115,7 @@ class Session(BaseModel):
         default_factory=dict,
         description="Map of anaphoric references to resolved entities",
     )
-    active_madhab: Optional[Madhab] = None
+    active_madhab: Madhab | None = None
 
 
 # ─── Retrieval Schemas ──────────────────────────────────────
@@ -129,7 +127,7 @@ class RetrievalResult(BaseModel):
     chunk_id: str
     score: float
     source: str = Field(description="'vector' | 'graph' | 'bm25'")
-    chunk: Optional[Chunk] = None
+    chunk: Chunk | None = None
 
 
 class FusedResult(BaseModel):
@@ -137,8 +135,8 @@ class FusedResult(BaseModel):
 
     chunk_id: str
     rrf_score: float
-    reranker_score: Optional[float] = None
-    chunk: Optional[Chunk] = None
+    reranker_score: float | None = None
+    chunk: Chunk | None = None
     sources: list[str] = Field(default_factory=list)
 
 
@@ -152,8 +150,8 @@ class Citation(BaseModel):
     chunk_id: str
     book_title: str
     chapter_path: list[str]
-    page_start: Optional[int] = None
-    page_end: Optional[int] = None
+    page_start: int | None = None
+    page_end: int | None = None
 
 
 class GenerationResponse(BaseModel):
@@ -161,7 +159,7 @@ class GenerationResponse(BaseModel):
 
     answer: str
     citations: list[Citation] = Field(default_factory=list)
-    intent: Optional[QueryIntent] = None
+    intent: QueryIntent | None = None
     chunks_used: list[str] = Field(default_factory=list)
     session_id: str
     cached: bool = False
